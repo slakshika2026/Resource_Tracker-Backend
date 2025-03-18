@@ -24,7 +24,21 @@ const addResourceType = async (name, description, category) => {
 
 };
 
+// Get distinct categories from resource_types
+const getCategories = async () => {
+   const [categories] = await db.query("SELECT DISTINCT category FROM resource_types");
+   return categories;
+};
+
+// Get resource types under a selected category
+const getResourceTypesByCategory = async (category) => {
+   const [resourceTypes] = await db.query("SELECT * FROM resource_types WHERE category = ?", [category]);
+   return resourceTypes;
+};
+
 module.exports = {
    getAllResourceTypes,
-   addResourceType
+   addResourceType,
+   getCategories,
+   getResourceTypesByCategory
 };

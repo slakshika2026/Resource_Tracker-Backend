@@ -105,7 +105,26 @@ const getResourcesAllocatedByUser = async (user_id) => {
    }
 };
 
+//delete resource items
+const deleteResourceItem = async (resource_item_id) => {
+   const sql = 'DELETE FROM resource_items WHERE resource_item_id = ?';
+   try {
+      const [result] = await db.query(sql, [resource_item_id]);
+      return result.affectedRows > 0; // Returns true if a row was deleted
+   } catch (err) {
+      console.error('Error deleting resource item:', err);
+      throw new Error('Error deleting resource item.');
+   }
+};
 
+// Get available resource items for a resource type
+const getResourceItemsByType = async (resource_type_id) => {
+   const [items] = await db.query(
+      "SELECT * FROM resource_items WHERE resource_type_id = ? AND status = 'available'",
+      [resource_type_id]
+   );
+   return items;
+};
 
 module.exports = {
    getAllResourceItems,
@@ -116,6 +135,8 @@ module.exports = {
    getUnderMaintenanceResources,
    allocateResourceToProject,
    getResourcesAllocatedByUser,
-   getResourcesAllocatedToProject
+   getResourcesAllocatedToProject,
+   deleteResourceItem,
+   getResourceItemsByType
 
 };

@@ -7,9 +7,12 @@ const {
    getInUseResources,
    getUnderMaintenanceResources,
    getResourcesAllocatedToProject,
-   getResourcesAllocatedByUser
+   getResourcesAllocatedByUser,
+   deleteResourceItem,
+   getResourceItemsByType
+
 } = require('../models/resourceItemModel');
-const { getAllResourceTypes } = require('../models/resourceTypeModel');
+const { getAllResourceTypes, getCategories, getResourceTypesByCategory } = require('../models/resourceTypeModel');
 
 
 // Get all resource items
@@ -140,7 +143,60 @@ const getResourcesByUser = async (req, res) => {
    }
 };
 
+// Delete a resource item by ID
+const deleteResourceItemByID = async (req, res) => {
+   const { resource_item_id } = req.params; // Extract ID from request parameters
 
+   if (!resource_item_id) {
+      return res.status(400).json({ message: 'Resource item ID is required.' });
+   }
+
+   try {
+      const deleted = await deleteResourceItem(resource_item_id);
+
+      if (deleted) {
+         return res.status(200).json({ message: 'Resource item deleted successfully.' });
+      } else {
+         return res.status(404).json({ message: 'Resource item not found.' });
+      }
+   } catch (err) {
+      console.error('Error deleting resource item:', err);
+      return res.status(500).json({ message: 'Server error occurred while deleting resource item.' });
+   }
+};
+// Get all unique categories
+const getAllCategories = async (req, res) => {
+   try {
+      const categories = await getCategories();
+      res.json(categories);
+   } catch (err) {
+      res.status(500).json({ message: "Error fetching categories" });
+   }
+};
+
+// Get resource types under a category
+const getResourceTypesUnderACategory = async (req, res) => {
+   const { category } = req.params;
+
+   try {
+      const resourceTypes = await getResourceTypesByCategory(category);
+      res.json(resourceTypes);
+   } catch (err) {
+      res.status(500).json({ message: "Error fetching resource types" });
+   }
+};
+
+// Get available resource items for a resource type
+const getResourceItemsUnderAType = async (req, res) => {
+   const { resource_type_id } = req.params;
+
+   try {
+      const items = await getResourceItemsByType(resource_type_id);
+      res.json(items);
+   } catch (err) {
+      res.status(500).json({ message: "Error fetching resource items" });
+   }
+};
 
 
 module.exports = {
@@ -152,5 +208,9 @@ module.exports = {
    getAvailable,
    allocateResource,
    getResourcesByUser,
-   getResourcesForProject
+   getResourcesForProject,
+   deleteResourceItemByID,
+   getAllCategories,
+   getResourceTypesUnderACategory,
+   getResourceItemsUnderAType
 };
