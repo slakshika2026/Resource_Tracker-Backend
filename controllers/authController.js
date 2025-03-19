@@ -30,7 +30,7 @@ const login = async (req, res) => {
 
       const user = await userModel.getUserByEmail(email);
       if (!user) {
-         return res.status(40).json({ message: 'User not found' });
+         return res.status(400).json({ message: 'User not found' });
       }
 
       const isMatch = await bcrypt.compare(password, user.password);
