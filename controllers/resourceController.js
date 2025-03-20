@@ -9,7 +9,8 @@ const {
    getResourcesAllocatedToProject,
    getResourcesAllocatedByUser,
    deleteResourceItem,
-   getResourceItemsByType
+   getResourceItemsByType,
+   saveAllocationHistory
 
 } = require('../models/resourceItemModel');
 const { getAllResourceTypes, getCategories, getResourceTypesByCategory } = require('../models/resourceTypeModel');
@@ -83,29 +84,30 @@ const getUnderMaintenance = async (req, res) => {
    }
 };
 
+//allocate resource to a project
 const allocateResource = async (req, res) => {
-   const { project_id
-      // , user_id
-   } = req.body;
-   const { resource_item_id } = req.params;  // Now, resource_item_id is from the URL parameter
+   const { project_id, user_id } = req.body; // user_id should also be passed in the body
+   const { resource_item_id } = req.params;
 
    console.log('Request Params:', req.params);  // Log the URL parameters
    console.log('Request Body:', req.body);  // Log the body for other data
 
    // Check if all required fields are present
-   if (!resource_item_id || !project_id
-      // || !user_id
-   ) {
+   if (!resource_item_id || !project_id) {
       return res.status(400).json({ message: 'Missing required fields: resource_item_id, project_id, or user_id.' });
    }
 
    try {
-      const allocationSuccess = await allocateResourceToProject(resource_item_id, project_id
-         // , user_id
-      );
+      const allocationSuccess = await allocateResourceToProject(resource_item_id, project_id);
 
       if (allocationSuccess) {
-         return res.status(200).json({ message: 'Resource allocated successfully.' });
+         // After successful allocation, save the allocation history
+         const historySuccess = await saveAllocationHistory(resource_item_id, project_id);
+         if (historySuccess) {
+            return res.status(200).json({ message: 'Resource allocated and history saved successfully.' });
+         } else {
+            return res.status(400).json({ message: 'Failed to save allocation history.' });
+         }
       } else {
          return res.status(400).json({ message: 'Failed to allocate resource. The resource may already be allocated or invalid.' });
       }
@@ -114,6 +116,7 @@ const allocateResource = async (req, res) => {
       return res.status(500).json({ message: 'Server error occurred while allocating resource.' });
    }
 };
+
 
 // Controller function to get all resources allocated to a specific project
 const getResourcesForProject = async (req, res) => {
