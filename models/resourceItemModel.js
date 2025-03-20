@@ -60,28 +60,54 @@ const updateResourceItemStatus = async (resource_item_id, status) => {
    await connection.query(query, [normalizedStatus, resource_item_id]);
 };
 
-const allocateResourceToProject = async (resource_item_id, project_id, user_id) => {
-   console.log('Allocating Resource:', { resource_item_id, project_id, user_id });
+const allocateResourceToProject = async (resource_item_id, project_id
+   // , user_id
+) => {
+   console.log('Allocating Resource:', {
+      resource_item_id, project_id
+      // , user_id
+   });
 
-   // Assuming you are running an UPDATE query to allocate the resource
-   const query = `
-      UPDATE resource_items
-      SET status = 'in use', project_id = ?, user_id = ?, allocated_at = NOW()
+   // Check if the resource is available
+   const checkQuery = `
+      SELECT * FROM resource_items
       WHERE resource_item_id = ? AND status = 'available';
    `;
-   const values = [project_id, user_id, resource_item_id];
-
    try {
-      const [rows] = await db.query(query, values);
-      console.log('Rows affected:', rows.affectedRows); // Log the affected rows to check if the update worked
+      const [rows] = await db.query(checkQuery, [resource_item_id]);
+
+      if (rows.length === 0) {
+         console.log('Resource is not available for allocation.');
+         return false; // Return false if the resource is not available
+      }
+
+      // Proceed with allocation if the resource is available
+      const allocateQuery = `
+         UPDATE resource_items
+         SET status = 'in use', project_id = ?, allocated_at = NOW()
+         WHERE resource_item_id = ? AND status = 'available';
+      `;
+      const [updateResult] = await db.query(allocateQuery, [project_id,
+         // user_id,
+         resource_item_id]);
+
+      console.log('Rows affected:', updateResult.affectedRows); // Log the affected rows to check if the update worked
 
       // Check if any rows were updated
-      return rows.affectedRows > 0;
+      if (updateResult.affectedRows > 0) {
+         console.log('Resource successfully allocated.');
+         return true; // Allocation success
+      } else {
+         console.log('Failed to allocate resource. Resource might already be in use or invalid.');
+         return false; // Allocation failed
+      }
    } catch (err) {
       console.error('Error allocating resource:', err);
       return false; // Return false if there was an error
    }
 };
+
+
 
 const getResourcesAllocatedToProject = async (project_id) => {
    const sql = 'SELECT * FROM resource_items WHERE project_id = ? AND status = "in use"';
