@@ -48,18 +48,52 @@ const addResourceItem = async (resource_type_id, serial_number, status) => {
 
 // Update resource item status
 const updateResourceItemStatus = async (resource_item_id, status) => {
-   const allowedStatuses = ['available', 'in use', 'under maintenance'];
+   const allowedStatuses = ["available", "under maintenance"];
    const normalizedStatus = status.trim().toLowerCase();
 
-   // Check if the status is valid
    if (!allowedStatuses.includes(normalizedStatus)) {
-      throw new Error('Invalid status value');
+      console.warn("Invalid status change attempt:", status);
+      return false;
    }
 
-   const query = "UPDATE resource_items SET status = ? WHERE resource_item_id = ?";
-   await connection.query(query, [normalizedStatus, resource_item_id]);
+   // Check if the resource exists and is currently in use
+   const [resource] = await connection.query(
+      "SELECT status FROM resource_items WHERE resource_item_id = ?",
+      [resource_item_id]
+   );
+
+   if (!resource || resource.length === 0) {
+      console.error(`Resource item ${resource_item_id} not found`);
+      return false;
+   }
+
+   const currentStatus = resource[0].status;
+
+   // Only allow changing from 'in use' to 'available'
+   if (currentStatus !== "in use") {
+      console.warn(`Resource ${resource_item_id} is not currently in use.`);
+      return false;
+   }
+
+   // Update allocation history to set end_date
+   const updateHistoryQuery = `
+      UPDATE allocation_history 
+      SET end_date = NOW() 
+      WHERE resource_item_id = ? AND end_date IS NULL;
+   `;
+
+   await connection.query(updateHistoryQuery, [resource_item_id]);
+
+   // Update resource status
+   const updateResourceQuery = "UPDATE resource_items SET status = ? WHERE resource_item_id = ?";
+   const [resourceUpdate] = await connection.query(updateResourceQuery, [normalizedStatus, resource_item_id]);
+
+   return resourceUpdate.affectedRows > 0;
 };
 
+
+
+//allocate resource to a project and saving allocation history
 const allocateResourceToProject = async (resource_item_id, project_id, user_id) => {
    console.log('Allocating Resource:', { resource_item_id, project_id, user_id });
 
