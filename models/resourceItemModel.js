@@ -83,6 +83,42 @@ const allocateResourceToProject = async (resource_item_id, project_id, user_id) 
    }
 };
 
+// New function to save allocation history
+const saveAllocationHistory = async (resource_item_id, project_id) => {
+   console.log('Saving Allocation History:', { resource_item_id, project_id });
+
+   // Fetch the necessary details for allocation history from the resource_items and projects tables
+   const resourceQuery = `
+      SELECT r.serial_number, rt.name AS resource_type, p.name AS project_name
+      FROM resource_items r
+      JOIN resource_types rt ON r.resource_type_id = rt.resource_type_id
+      JOIN projects p ON r.project_id = p.project_id
+      WHERE r.resource_item_id = ?
+   `;
+   const [resourceDetails] = await db.query(resourceQuery, [resource_item_id]);
+
+   if (!resourceDetails || resourceDetails.length === 0) {
+      return false; // If no details are found, return false
+   }
+
+   const { serial_number, resource_type, project_name } = resourceDetails[0];
+
+   const historyQuery = `
+      INSERT INTO allocation_history (project_id, resource_item_id, resource_type, serial_number, allocated_date, project_name)
+      VALUES (?, ?, ?, ?, NOW(), ?)
+   `;
+   const historyValues = [project_id, resource_item_id, resource_type, serial_number, project_name];
+
+   try {
+      await db.query(historyQuery, historyValues);
+      return true; // Allocation history saved successfully
+   } catch (err) {
+      console.error('Error saving allocation history:', err);
+      return false; // Return false if there was an error saving the history
+   }
+};
+
+
 const getResourcesAllocatedToProject = async (project_id) => {
    const sql = 'SELECT * FROM resource_items WHERE project_id = ? AND status = "in use"';
    try {
@@ -137,6 +173,7 @@ module.exports = {
    getResourcesAllocatedByUser,
    getResourcesAllocatedToProject,
    deleteResourceItem,
-   getResourceItemsByType
+   getResourceItemsByType,
+   saveAllocationHistory
 
 };
