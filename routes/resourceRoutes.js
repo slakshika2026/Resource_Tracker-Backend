@@ -12,7 +12,7 @@ const { getResourceItems,
    getAllCategories,
    getResourceTypesUnderACategory,
    getResourceItemsUnderAType
-   } = require('../controllers/resourceController');
+} = require('../controllers/resourceController');
 const router = express.Router();
 
 router.get('/', getResourceItems);
@@ -21,7 +21,7 @@ router.put('/', updateResourceStatus);
 router.get('/available', getAvailable);
 router.get('/in_use', getInUse);
 router.get('/under_maintenance', getUnderMaintenance);
-router.post('/allocate_resource', allocateResource);
+router.post('/:resource_item_id/allocate_resource', allocateResource);
 router.get('/by_project/:project_id', getResourcesForProject);
 router.get('/by_user/:user_id', getResourcesByUser);
 router.delete('/res_item/del/:resource_item_id', deleteResourceItemByID);
