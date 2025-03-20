@@ -30,4 +30,6 @@ router.get("/categories/:category/resource-types", getResourceTypesUnderACategor
 router.get("/resource-types/:resource_type_id/resource_items", getResourceItemsUnderAType);
 
 
+
+
 module.exports = router;
