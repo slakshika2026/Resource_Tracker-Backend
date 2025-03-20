@@ -115,7 +115,6 @@ const allocateResource = async (req, res) => {
    }
 };
 
-
 // Controller function to get all resources allocated to a specific project
 const getResourcesForProject = async (req, res) => {
    const { project_id } = req.params; // Get project_id from the URL parameters
