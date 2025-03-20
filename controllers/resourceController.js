@@ -84,17 +84,25 @@ const getUnderMaintenance = async (req, res) => {
 };
 
 const allocateResource = async (req, res) => {
-   const { resource_item_id, project_id, user_id } = req.body;
+   const { project_id
+      // , user_id
+   } = req.body;
+   const { resource_item_id } = req.params;  // Now, resource_item_id is from the URL parameter
 
-   console.log('Request Body:', req.body);
+   console.log('Request Params:', req.params);  // Log the URL parameters
+   console.log('Request Body:', req.body);  // Log the body for other data
 
    // Check if all required fields are present
-   if (!resource_item_id || !project_id || !user_id) {
+   if (!resource_item_id || !project_id
+      // || !user_id
+   ) {
       return res.status(400).json({ message: 'Missing required fields: resource_item_id, project_id, or user_id.' });
    }
 
    try {
-      const allocationSuccess = await allocateResourceToProject(resource_item_id, project_id, user_id);
+      const allocationSuccess = await allocateResourceToProject(resource_item_id, project_id
+         // , user_id
+      );
 
       if (allocationSuccess) {
          return res.status(200).json({ message: 'Resource allocated successfully.' });
