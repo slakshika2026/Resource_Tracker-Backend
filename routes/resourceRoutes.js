@@ -17,7 +17,7 @@ const router = express.Router();
 
 router.get('/', getResourceItems);
 router.post('/', addResource);
-router.put('/', updateResourceStatus);
+router.put('/update_status/:resource_item_id', updateResourceStatus);
 router.get('/available', getAvailable);
 router.get('/in_use', getInUse);
 router.get('/under_maintenance', getUnderMaintenance);

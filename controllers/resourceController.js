@@ -37,19 +37,28 @@ const addResource = async (req, res) => {
       res.status(500).json({ message: 'Server error' });
    }
 };
-
-// Update resource item status
 const updateResourceStatus = async (req, res) => {
-   const { resource_item_id, status } = req.body;
+   const { resource_item_id } = req.params;  // Extract from URL param
+   const { status } = req.body;  // Get status from request body
+
+   if (!resource_item_id || !status) {
+      return res.status(400).json({ message: "Resource ID and status are required" });
+   }
 
    try {
-      await updateResourceItemStatus(resource_item_id, status);
-      res.status(200).json({ message: 'Resource status updated successfully' });
+      const updateSuccess = await updateResourceItemStatus(resource_item_id, status);
+
+      if (!updateSuccess) {
+         return res.status(400).json({ message: "Invalid status update operation" });
+      }
+
+      res.status(200).json({ message: "Resource status updated successfully" });
    } catch (err) {
-      res.status(500).json({ message: 'Server error' });
-      console.log(err);
+      console.error("Error updating resource status:", err);
+      res.status(500).json({ message: "Server error" });
    }
 };
+
 
 // Get all available resources
 const getAvailable = async (req, res) => {

@@ -1,4 +1,8 @@
 const allocationModel = require('../models/allocationModel');
+const {
+   getAllocationsForProject
+
+} = require('../models/allocationModel');
 
 // Allocate resource to a project
 const allocateResourceToProject = async (req, res) => {
