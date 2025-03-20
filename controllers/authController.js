@@ -8,19 +8,26 @@ const bcrypt = require('bcryptjs');
 const register = async (req, res) => {
    console.log(req.body);
    const { name, email, password, role } = req.body;
+
    if (!name || !email || !password || !role) {
-      return res.status(400).json({ message: 'Please provide all required fields (name, email, password, role)' });
+      return res.status(400).json({ message: "Please provide all required fields (name, email, password, role)" });
    }
 
    try {
+      // Check if email already exists
+      const existingUser = await userModel.getUserByEmail(email); // Assuming this function exists
+      if (existingUser) {
+         return res.status(409).json({ message: "This email is already registered. Try logging in instead." });
+      }
+
       const userId = await userModel.registerUser(name, email, password, role);
-      res.status(201).json({ message: 'User registered successfully', userId });
-   }
-   catch (err) {
+      res.status(201).json({ message: "User registered successfully", userId });
+   } catch (err) {
       console.error(err);
-      res.status(500).json({ message: 'Error registering user', error: err });
+      res.status(500).json({ message: "Error registering user", error: err });
    }
 };
+
 
 
 //Login a user
