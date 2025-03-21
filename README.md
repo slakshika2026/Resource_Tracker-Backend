@@ -32,7 +32,6 @@ PORT=5000`
 
 To start the application:
 `
-npm install
 npm start`
 The app will run at http://localhost:5000.
 
