@@ -15,7 +15,7 @@ dotenv.config();
 
 const app = express();
 app.use(cors({
-   origin: 'http://localhost:5174', // Your frontend URL
+   origin: 'http://localhost:5173', // Your frontend URL
    methods: ['GET', 'POST', 'PUT', 'DELETE'],
    allowedHeaders: ['Content-Type', 'Authorization'],
 }));
@@ -26,8 +26,6 @@ app.use(express.json());
 
 //set up routes
 app.use('/api/auth', authRoutes);
-// app.use('/api/resource-types', authenticate, resourceTypeRoutes);
-// app.use('/api/resource-items', authenticate, resourceItemRoutes);
 app.use('/api/allocations', authenticate, allocationRoutes);
 app.use('/api/resources', authenticate, resourceRoutes);
 app.use('/api/projects', authenticate, projectRoutes);

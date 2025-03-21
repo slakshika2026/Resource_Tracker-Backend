@@ -1,17 +1,18 @@
 const db = require('../config/db');
 
-// Create a new need/project
+// Create a new project
 const createProject = async (name, description, start_date) => {
    const sql = 'INSERT INTO projects (name, description, start_date) VALUES (?, ?, ?)';
    try {
       const [result] = await db.query(sql, [name, description, start_date]);
       return result.insertId;
-   }
-   catch (err) {
+   } catch (err) {
       console.log(err);
       throw err;
    }
 };
+
+
 
 // Get all needs/projects
 const getAllProjects = async () => {
@@ -27,8 +28,22 @@ const getProjectById = async (project_id) => {
 };
 
 
+
+// Function to check if the project name is unique
+const checkProjectNameUnique = async (name) => {
+   const sql = 'SELECT COUNT(*) AS count FROM projects WHERE name = ?';
+   try {
+      const [result] = await db.query(sql, [name]);
+      return result[0].count === 0; // If count is 0, name is unique
+   } catch (err) {
+      console.log(err);
+      throw err;
+   }
+};
+
 module.exports = {
    createProject,
    getAllProjects,
-   getProjectById
+   getProjectById,
+   checkProjectNameUnique
 };
