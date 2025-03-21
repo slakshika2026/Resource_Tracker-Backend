@@ -1,8 +1,10 @@
-const allocationModel = require('../models/allocationModel');
+
 const {
-   getAllocationsForProject
+   getAllocationsForProject,
+   getTheAllocationHistory
 
 } = require('../models/allocationModel');
+
 
 // Allocate resource to a project
 const allocateResourceToProject = async (req, res) => {
@@ -27,7 +29,36 @@ const getAllocations = async (req, res) => {
    }
 };
 
+
+
+// Controller function to get allocation history
+const getAllocationHistory = async (req, res) => {
+   try {
+      const results = await getTheAllocationHistory(); // Fetch data from the database
+      // console.log("Results from DB:", results); // Add this log to check raw results
+
+      if (results.length > 0) {
+         const chartData = results.map(item => ({
+            serial_number: item.serial_number,
+            allocated_date: new Date(item.allocated_date).toISOString(),
+            end_date: item.end_date ? new Date(item.end_date).toISOString() : null,
+            project_name: item.project_name
+         }));
+
+         // console.log("Mapped Chart Data:", chartData); // Check mapped data
+         return res.status(200).json(chartData); // Send the formatted data as JSON
+      } else {
+         return res.status(404).json({ message: 'No allocation history found' });
+      }
+   } catch (err) {
+      console.error('Error fetching allocation history:', err);
+      return res.status(500).json({ message: 'Server error' });
+   }
+};
+
+
 module.exports = {
    allocateResourceToProject,
-   getAllocations
+   getAllocations,
+   getAllocationHistory
 };
