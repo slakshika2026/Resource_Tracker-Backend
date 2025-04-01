@@ -20,4 +20,4 @@ db.connect((err) => {
    }
 });
 
-module.exports = db.promise();
+module.exports = db.promise();//promise based not callback

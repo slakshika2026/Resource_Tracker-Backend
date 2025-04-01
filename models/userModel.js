@@ -11,7 +11,7 @@ const registerUser = async (name, email, password, role) => {
    }
 
    // Hash the password before saving it
-   const hashedPassword = await bcrypt.hash(password, number);
+   const hashedPassword = await bcrypt.hash(password, number); //number is teh salt round. password is 10 times hashed before store it
 
    const sql = 'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)';
    try {

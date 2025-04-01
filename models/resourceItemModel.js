@@ -4,7 +4,7 @@ const connection = require('../config/db'); // adjust path to your db.js file
 const getAllResourceItems = async () => {
    try {
       const [results] = await db.query(
-         'SELECT r.resource_type_id, r.name AS resource_type, ri.serial_number, ri.status FROM resource_types r LEFT JOIN resource_items ri ON r.resource_type_id = ri.resource_type_id'
+         'SELECT r.resource_type_id, r.name AS resource_type, ri.serial_number, ri.status,ri.resource_item_id FROM resource_types r LEFT JOIN resource_items ri ON r.resource_type_id = ri.resource_type_id'
       );
       return results;
    } catch (err) {
@@ -175,17 +175,35 @@ const getResourcesAllocatedByUser = async (user_id) => {
    }
 };
 
-//delete resource items
+// Delete resource items
 const deleteResourceItem = async (resource_item_id) => {
-   const sql = 'DELETE FROM resource_items WHERE resource_item_id = ?';
+   const checkSql = 'SELECT status FROM resource_items WHERE resource_item_id = ?';
+   const updateSql = 'UPDATE resource_items SET status = "deleted" WHERE resource_item_id = ?';
+
    try {
-      const [result] = await db.query(sql, [resource_item_id]);
-      return result.affectedRows > 0; // Returns true if a row was deleted
+      // Check if the resource is already in use
+      const [checkResult] = await db.query(checkSql, [resource_item_id]);
+
+      if (checkResult.length === 0) {
+         throw new Error('Resource item not found.');
+      }
+
+      const currentStatus = checkResult[0].status;
+
+      if (currentStatus === 'in use') {
+         throw new Error('Resource item is currently in use and cannot be deleted.');
+      }
+
+      // Update the status to "deleted"
+      const [updateResult] = await db.query(updateSql, [resource_item_id]);
+      return updateResult.affectedRows > 0; // Returns true if the update was successful
    } catch (err) {
-      console.error('Error deleting resource item:', err);
-      throw new Error('Error deleting resource item.');
+      console.error('Error marking resource item as deleted:', err);
+      throw new Error('Error marking resource item as deleted.');
    }
 };
+
+
 
 // Get available resource items for a resource type
 const getResourceItemsByType = async (resource_type_id) => {

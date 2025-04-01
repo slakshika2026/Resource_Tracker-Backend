@@ -1,12 +1,9 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
-// const bodyParser = require('body-parser');
 const authRoutes = require('./routes/authRoutes');
 const db = require('./config/db');
 const { authenticate } = require('./middleware/authMiddleware');
-// const resourceTypeRoutes = require('./routes/resourceTypeRoutes');
-// const resourceItemRoutes = require('./routes/resourceItemRoutes');
 const allocationRoutes = require('./routes/allocationRoutes');
 const resourceRoutes = require('./routes/resourceRoutes');
 const projectRoutes = require('./routes/projectRoutes');
