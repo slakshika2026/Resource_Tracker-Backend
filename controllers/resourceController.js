@@ -2,15 +2,16 @@ const {
    addResourceItem,
    getAllResourceItems,
    updateResourceItemStatus,
-   allocateResourceToProject
-   , getAvailableResources,
+   allocateResourceToProject,
+   getAvailableResources,
    getInUseResources,
    getUnderMaintenanceResources,
    getResourcesAllocatedToProject,
    getResourcesAllocatedByUser,
    deleteResourceItem,
    getResourceItemsByType,
-   saveAllocationHistory
+   saveAllocationHistory,
+   getDeletedResources
 
 } = require('../models/resourceItemModel');
 const { getAllResourceTypes, getCategories, getResourceTypesByCategory } = require('../models/resourceTypeModel');
@@ -64,6 +65,17 @@ const updateResourceStatus = async (req, res) => {
 const getAvailable = async (req, res) => {
    try {
       const resources = await getAvailableResources();
+      res.status(200).json(resources);
+   } catch (err) {
+      console.log(err);
+      res.status(500).json({ message: 'Server error' });
+   }
+};
+
+// Get all deleted resources
+const getDeleted = async (req, res) => {
+   try {
+      const resources = await getDeletedResources();
       res.status(200).json(resources);
    } catch (err) {
       console.log(err);
@@ -232,5 +244,6 @@ module.exports = {
    deleteResourceItemByID,
    getAllCategories,
    getResourceTypesUnderACategory,
-   getResourceItemsUnderAType
+   getResourceItemsUnderAType,
+   getDeleted
 };

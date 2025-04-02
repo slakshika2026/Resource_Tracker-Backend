@@ -29,12 +29,10 @@ const register = async (req, res) => {
 };
 
 
-
-//Login a user
+// Login a user
 const login = async (req, res) => {
    const { email, password } = req.body;
    try {
-
       const user = await userModel.getUserByEmail(email);
       if (!user) {
          return res.status(400).json({ message: 'User not found' });
@@ -44,16 +42,26 @@ const login = async (req, res) => {
       if (!isMatch) {
          return res.status(400).json({ message: 'Invalid credentials' });
       }
-      const token = jwt.sign({ userId: user.user_id, role: user.role },
-         process.env.JWT_SECRET, { expiresIn: '1h' });
-      res.json({ message: 'Login successful', token });
 
+      // Include the user's name in the token payload
+      const token = jwt.sign(
+         {
+            userId: user.user_id,
+            name: user.name,  // Add the name field
+            role: user.role
+         },
+         process.env.JWT_SECRET,
+         { expiresIn: '1h' }
+      );
+
+      res.json({ message: 'Login successful', token });
    }
    catch (err) {
       console.error('Error logging in:', err);
       res.status(500).json({ message: 'Error logging in', error: err });
    }
 };
+
 
 
 // Get user data by ID (protected route)

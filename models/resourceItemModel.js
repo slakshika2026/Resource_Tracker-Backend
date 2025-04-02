@@ -12,15 +12,41 @@ const getAllResourceItems = async () => {
    }
 };
 
-//categorized data getting
+
 const getAvailableResources = async () => {
-   const sql = 'SELECT * FROM resource_items WHERE status = "available"';
+   const sql = `
+      SELECT ri.resource_item_id, ri.serial_number, ri.status, 
+             r.resource_type_id, r.name AS resource_type 
+      FROM resource_items ri
+      LEFT JOIN resource_types r ON ri.resource_type_id = r.resource_type_id
+      WHERE ri.status = "available"
+   `;
    const [rows] = await db.query(sql);
    return rows;
 };
 
+// Retrieve in-use resources with resource type
 const getInUseResources = async () => {
-   const sql = 'SELECT * FROM resource_items WHERE status = "in use"';
+   const sql = `
+      SELECT ri.resource_item_id, ri.serial_number, ri.status, 
+             r.resource_type_id, r.name AS resource_type 
+      FROM resource_items ri
+      LEFT JOIN resource_types r ON ri.resource_type_id = r.resource_type_id
+      WHERE ri.status = "in use"
+   `;
+   const [rows] = await db.query(sql);
+   return rows;
+};
+
+// Retrieve deleted resources with resource type
+const getDeletedResources = async () => {
+   const sql = `
+      SELECT ri.resource_item_id, ri.serial_number, ri.status, 
+             r.resource_type_id, r.name AS resource_type 
+      FROM resource_items ri
+      LEFT JOIN resource_types r ON ri.resource_type_id = r.resource_type_id
+      WHERE ri.status = "deleted"
+   `;
    const [rows] = await db.query(sql);
    return rows;
 };
@@ -226,6 +252,7 @@ module.exports = {
    getResourcesAllocatedToProject,
    deleteResourceItem,
    getResourceItemsByType,
-   saveAllocationHistory
+   saveAllocationHistory,
+   getDeletedResources
 
 };
