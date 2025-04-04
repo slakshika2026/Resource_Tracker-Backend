@@ -11,10 +11,23 @@ const {
    deleteResourceItem,
    getResourceItemsByType,
    saveAllocationHistory,
-   getDeletedResources
-
+   getDeletedResources,
+   getResourceTypeIdByName
 } = require('../models/resourceItemModel');
 const { getAllResourceTypes, getCategories, getResourceTypesByCategory } = require('../models/resourceTypeModel');
+
+//get all resource types
+const getResourceTypes = async (req, res) => {
+   try {
+      const resourceTypes = await getAllResourceTypes();
+      res.status(200).json(resourceTypes);
+   } catch (err) {
+      console.error("Error fetching resource types:", err);
+      res.status(500).json({ error: "Failed to fetch resource types." });
+   }
+};
+
+
 
 
 // Get all resource items
@@ -38,6 +51,8 @@ const addResource = async (req, res) => {
       res.status(500).json({ message: 'Server error' });
    }
 };
+
+
 const updateResourceStatus = async (req, res) => {
    const { resource_item_id } = req.params;  // Extract from URL param
    const { status } = req.body;  // Get status from request body
@@ -245,5 +260,6 @@ module.exports = {
    getAllCategories,
    getResourceTypesUnderACategory,
    getResourceItemsUnderAType,
-   getDeleted
+   getDeleted,
+   getResourceTypes
 };

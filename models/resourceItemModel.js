@@ -4,12 +4,32 @@ const connection = require('../config/db'); // adjust path to your db.js file
 const getAllResourceItems = async () => {
    try {
       const [results] = await db.query(
-         'SELECT r.resource_type_id, r.name AS resource_type, ri.serial_number, ri.status,ri.resource_item_id FROM resource_types r LEFT JOIN resource_items ri ON r.resource_type_id = ri.resource_type_id'
+         `SELECT r.resource_type_id, r.name AS resource_type, 
+              ri.serial_number, ri.status, ri.resource_item_id, 
+              p.name AS project_name
+       FROM resource_types r
+       LEFT JOIN resource_items ri ON r.resource_type_id = ri.resource_type_id
+       LEFT JOIN projects p ON ri.project_id = p.project_id`
       );
       return results;
    } catch (err) {
       throw err;
    }
+};
+
+// Retrieve in-use resources with resource type
+const getInUseResources = async () => {
+   const sql = `
+      SELECT ri.resource_item_id, ri.serial_number, ri.status, 
+             r.resource_type_id, r.name AS resource_type,
+             p.name AS project_name
+      FROM resource_items ri
+      LEFT JOIN resource_types r ON ri.resource_type_id = r.resource_type_id
+      LEFT JOIN projects p ON ri.project_id = p.project_id
+      WHERE ri.status = "in use"
+   `;
+   const [rows] = await db.query(sql);
+   return rows;
 };
 
 
@@ -25,18 +45,7 @@ const getAvailableResources = async () => {
    return rows;
 };
 
-// Retrieve in-use resources with resource type
-const getInUseResources = async () => {
-   const sql = `
-      SELECT ri.resource_item_id, ri.serial_number, ri.status, 
-             r.resource_type_id, r.name AS resource_type 
-      FROM resource_items ri
-      LEFT JOIN resource_types r ON ri.resource_type_id = r.resource_type_id
-      WHERE ri.status = "in use"
-   `;
-   const [rows] = await db.query(sql);
-   return rows;
-};
+
 
 // Retrieve deleted resources with resource type
 const getDeletedResources = async () => {
@@ -57,9 +66,6 @@ const getUnderMaintenanceResources = async () => {
    return rows;
 };
 
-
-
-
 // Add a new resource item
 const addResourceItem = async (resource_type_id, serial_number, status) => {
    const sql = 'INSERT INTO resource_items (resource_type_id, serial_number, status) VALUES (?, ?, ?)';
@@ -71,6 +77,7 @@ const addResourceItem = async (resource_type_id, serial_number, status) => {
       throw err;
    }
 };
+
 
 // Update resource item status
 const updateResourceItemStatus = async (resource_item_id, status) => {
@@ -253,6 +260,7 @@ module.exports = {
    deleteResourceItem,
    getResourceItemsByType,
    saveAllocationHistory,
-   getDeletedResources
+   getDeletedResources,
+
 
 };

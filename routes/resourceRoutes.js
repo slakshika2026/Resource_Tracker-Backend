@@ -12,7 +12,8 @@ const { getResourceItems,
    getAllCategories,
    getResourceTypesUnderACategory,
    getResourceItemsUnderAType,
-   getDeleted
+   getDeleted,
+   getResourceTypes
 } = require('../controllers/resourceController');
 const router = express.Router();
 
@@ -30,6 +31,7 @@ router.delete('/res_item/del/:resource_item_id', deleteResourceItemByID);
 router.get("/categories", getAllCategories);
 router.get("/categories/:category/resource-types", getResourceTypesUnderACategory);
 router.get("/resource-types/:resource_type_id/resource_items", getResourceItemsUnderAType);
+router.get("/resource-types", getResourceTypes);
 
 
 
