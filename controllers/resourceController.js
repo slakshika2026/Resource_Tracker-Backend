@@ -12,9 +12,11 @@ const {
    getResourceItemsByType,
    saveAllocationHistory,
    getDeletedResources,
-   getResourceTypeIdByName
+
+   // getResourceTypeIdByName
 } = require('../models/resourceItemModel');
-const { getAllResourceTypes, getCategories, getResourceTypesByCategory } = require('../models/resourceTypeModel');
+
+const { getAllResourceTypes, addResourceType, getCategories, getResourceTypesByCategory } = require('../models/resourceTypeModel');
 
 //get all resource types
 const getResourceTypes = async (req, res) => {
@@ -40,17 +42,33 @@ const getResourceItems = async (req, res) => {
    }
 };
 
-// Add a new resource item
+
 const addResource = async (req, res) => {
-   const { resource_type_id, serial_number, status } = req.body;
+   const {
+      resource_type_id,
+      serial_number,
+      status,
+      new_resource_type,
+      description,
+      category
+   } = req.body;
 
    try {
-      const resourceItemId = await addResourceItem(resource_type_id, serial_number, status);
+      let finalResourceTypeId = resource_type_id;
+
+      // If adding a new resource type
+      if (new_resource_type) {
+         finalResourceTypeId = await addResourceType(new_resource_type, description, category);
+      }
+
+      const resourceItemId = await addResourceItem(finalResourceTypeId, serial_number, status);
       res.status(201).json({ resourceItemId });
    } catch (err) {
+      console.error(err);
       res.status(500).json({ message: 'Server error' });
    }
 };
+
 
 
 const updateResourceStatus = async (req, res) => {
@@ -122,7 +140,7 @@ const getUnderMaintenance = async (req, res) => {
 
 //allocate resource to a project
 const allocateResource = async (req, res) => {
-   const { project_id, user_id } = req.body; // user_id should also be passed in the body
+   const { project_id, user_id, expected_return_date } = req.body; // user_id should also be passed in the body
    const { resource_item_id } = req.params;
 
    console.log('Request Params:', req.params);  // Log the URL parameters
@@ -138,7 +156,7 @@ const allocateResource = async (req, res) => {
 
       if (allocationSuccess) {
          // After successful allocation, save the allocation history
-         const historySuccess = await saveAllocationHistory(resource_item_id, project_id);
+         const historySuccess = await saveAllocationHistory(resource_item_id, project_id, expected_return_date);
          if (historySuccess) {
             return res.status(200).json({ message: 'Resource allocated and history saved successfully.' });
          } else {

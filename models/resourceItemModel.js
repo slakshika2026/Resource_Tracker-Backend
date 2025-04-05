@@ -5,11 +5,15 @@ const getAllResourceItems = async () => {
    try {
       const [results] = await db.query(
          `SELECT r.resource_type_id, r.name AS resource_type, 
-              ri.serial_number, ri.status, ri.resource_item_id, 
-              p.name AS project_name
-       FROM resource_types r
-       LEFT JOIN resource_items ri ON r.resource_type_id = ri.resource_type_id
-       LEFT JOIN projects p ON ri.project_id = p.project_id`
+                 ri.serial_number, ri.status, ri.resource_item_id, 
+                 p.name AS project_name,
+                 ah.expected_return_date
+          FROM resource_types r
+          LEFT JOIN resource_items ri ON r.resource_type_id = ri.resource_type_id
+          LEFT JOIN projects p ON ri.project_id = p.project_id
+          LEFT JOIN allocation_history ah 
+            ON ah.resource_item_id = ri.resource_item_id 
+            AND ah.end_date IS NULL`
       );
       return results;
    } catch (err) {
@@ -17,20 +21,23 @@ const getAllResourceItems = async () => {
    }
 };
 
-// Retrieve in-use resources with resource type
+
+// Retrieve in-use resources with resource type and expected return date
 const getInUseResources = async () => {
    const sql = `
       SELECT ri.resource_item_id, ri.serial_number, ri.status, 
              r.resource_type_id, r.name AS resource_type,
-             p.name AS project_name
+             p.name AS project_name, ah.expected_return_date
       FROM resource_items ri
       LEFT JOIN resource_types r ON ri.resource_type_id = r.resource_type_id
       LEFT JOIN projects p ON ri.project_id = p.project_id
+      LEFT JOIN allocation_history ah ON ri.resource_item_id = ah.resource_item_id
       WHERE ri.status = "in use"
    `;
    const [rows] = await db.query(sql);
    return rows;
 };
+
 
 
 const getAvailableResources = async () => {
@@ -71,12 +78,13 @@ const addResourceItem = async (resource_type_id, serial_number, status) => {
    const sql = 'INSERT INTO resource_items (resource_type_id, serial_number, status) VALUES (?, ?, ?)';
    try {
       const [result] = await db.query(sql, [resource_type_id, serial_number, status]);
-      return result.insertId; // Return the inserted resource ID
+      return result.insertId;
    } catch (err) {
       console.log(err);
       throw err;
    }
 };
+
 
 
 // Update resource item status
@@ -151,7 +159,7 @@ const allocateResourceToProject = async (resource_item_id, project_id, user_id) 
 };
 
 // New function to save allocation history
-const saveAllocationHistory = async (resource_item_id, project_id) => {
+const saveAllocationHistory = async (resource_item_id, project_id, expected_return_date) => {
    console.log('Saving Allocation History:', { resource_item_id, project_id });
 
    // Fetch the necessary details for allocation history from the resource_items and projects tables
@@ -171,10 +179,15 @@ const saveAllocationHistory = async (resource_item_id, project_id) => {
    const { serial_number, resource_type, project_name } = resourceDetails[0];
 
    const historyQuery = `
-      INSERT INTO allocation_history (project_id, resource_item_id, resource_type, serial_number, allocated_date, project_name)
-      VALUES (?, ?, ?, ?, NOW(), ?)
+      INSERT INTO allocation_history (
+         project_id, resource_item_id, resource_type, serial_number,
+         allocated_date, expected_return_date, project_name
+      ) VALUES (?, ?, ?, ?, NOW(), ?, ?)
    `;
-   const historyValues = [project_id, resource_item_id, resource_type, serial_number, project_name];
+   const historyValues = [
+      project_id, resource_item_id, resource_type, serial_number,
+      expected_return_date, project_name
+   ];
 
    try {
       await db.query(historyQuery, historyValues);

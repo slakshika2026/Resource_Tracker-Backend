@@ -16,13 +16,13 @@ const addResourceType = async (name, description, category) => {
    const sql = 'INSERT INTO resource_types (name, description, category) VALUES (?, ?, ?)';
    try {
       const [result] = await db.query(sql, [name, description, category]);
-      return result.insertId;
-   }
-   catch (err) {
+      return result.insertId; // Return the new resource type ID
+   } catch (err) {
+      console.log("Error adding resource type:", err);
       throw err;
    }
-
 };
+
 
 // Get distinct categories from resource_types
 const getCategories = async () => {
