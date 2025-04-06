@@ -135,6 +135,41 @@ const updateResourceItemStatus = async (resource_item_id, status) => {
 
    return resourceUpdate.affectedRows > 0;
 };
+const deallocateResourceItem = async (resource_item_id) => {
+   const normalizedStatus = "available"; // We are changing the status to "available"
+
+   // Get current status of the resource
+   const [resource] = await connection.query(
+      "SELECT status FROM resource_items WHERE resource_item_id = ?",
+      [resource_item_id]
+   );
+
+   if (!resource || resource.length === 0) {
+      console.error(`Resource item ${resource_item_id} not found`);
+      return false;
+   }
+
+   const currentStatus = resource[0].status;
+
+   // Update the status to "available"
+   const updateResourceQuery = "UPDATE resource_items SET status = ? WHERE resource_item_id = ?";
+   const [resourceUpdate] = await connection.query(updateResourceQuery, [normalizedStatus, resource_item_id]);
+
+   if (resourceUpdate.affectedRows > 0) {
+      // Update the end_date in allocation_history to the current timestamp
+      const updateAllocationHistoryQuery = `
+         UPDATE allocation_history
+         SET end_date = NOW()
+         WHERE resource_item_id = ? AND end_date IS NULL
+      `;
+
+      const [allocationUpdate] = await connection.query(updateAllocationHistoryQuery, [resource_item_id]);
+
+      return allocationUpdate.affectedRows > 0;
+   }
+
+   return false;
+};
 
 
 
@@ -278,6 +313,7 @@ module.exports = {
    getResourceItemsByType,
    saveAllocationHistory,
    getDeletedResources,
+   deallocateResourceItem
 
 
 };

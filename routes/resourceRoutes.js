@@ -13,7 +13,8 @@ const { getResourceItems,
    getResourceTypesUnderACategory,
    getResourceItemsUnderAType,
    getDeleted,
-   getResourceTypes
+   getResourceTypes,
+   deallocateResource
 } = require('../controllers/resourceController');
 const router = express.Router();
 
@@ -32,6 +33,7 @@ router.get("/categories", getAllCategories);
 router.get("/categories/:category/resource-types", getResourceTypesUnderACategory);
 router.get("/resource-types/:resource_type_id/resource_items", getResourceItemsUnderAType);
 router.get("/resource-types", getResourceTypes);
+router.patch('/deallocate/:resource_item_id', deallocateResource);
 
 
 

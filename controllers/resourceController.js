@@ -12,6 +12,7 @@ const {
    getResourceItemsByType,
    saveAllocationHistory,
    getDeletedResources,
+   deallocateResourceItem
 
    // getResourceTypeIdByName
 } = require('../models/resourceItemModel');
@@ -172,6 +173,29 @@ const allocateResource = async (req, res) => {
 };
 
 
+const deallocateResource = async (req, res) => {
+   const { resource_item_id } = req.params;  // Extract resource ID from URL param
+
+   if (!resource_item_id) {
+      return res.status(400).json({ message: "Resource ID is required" });
+   }
+
+   try {
+      // Attempt to deallocate the resource by changing its status to "available"
+      const deallocationSuccess = await deallocateResourceItem(resource_item_id);
+
+      if (!deallocationSuccess) {
+         return res.status(400).json({ message: "Failed to deallocate resource or resource is not in use" });
+      }
+
+      res.status(200).json({ message: "Resource deallocated successfully" });
+   } catch (err) {
+      console.error("Error deallocating resource:", err);
+      res.status(500).json({ message: "Server error" });
+   }
+};
+
+
 // Controller function to get all resources allocated to a specific project
 const getResourcesForProject = async (req, res) => {
    const { project_id } = req.params; // Get project_id from the URL parameters
@@ -279,5 +303,6 @@ module.exports = {
    getResourceTypesUnderACategory,
    getResourceItemsUnderAType,
    getDeleted,
-   getResourceTypes
+   getResourceTypes,
+   deallocateResource
 };
