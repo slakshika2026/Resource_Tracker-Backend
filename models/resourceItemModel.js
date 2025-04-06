@@ -68,10 +68,17 @@ const getDeletedResources = async () => {
 };
 
 const getUnderMaintenanceResources = async () => {
-   const sql = 'SELECT * FROM resource_items WHERE status = "under maintenance"';
+   const sql = `
+      SELECT ri.resource_item_id, ri.serial_number, ri.status, 
+             r.resource_type_id, r.name AS resource_type 
+      FROM resource_items ri
+      LEFT JOIN resource_types r ON ri.resource_type_id = r.resource_type_id
+      WHERE ri.status = "under maintenance"
+   `;
    const [rows] = await db.query(sql);
    return rows;
 };
+
 
 // Add a new resource item
 const addResourceItem = async (resource_type_id, serial_number, status) => {
@@ -97,7 +104,7 @@ const updateResourceItemStatus = async (resource_item_id, status) => {
       return false;
    }
 
-   // Check if the resource exists and is currently in use
+   // Get current status
    const [resource] = await connection.query(
       "SELECT status FROM resource_items WHERE resource_item_id = ?",
       [resource_item_id]
@@ -110,22 +117,19 @@ const updateResourceItemStatus = async (resource_item_id, status) => {
 
    const currentStatus = resource[0].status;
 
-   // Only allow changing from 'in use' to 'available'
-   if (currentStatus !== "in use") {
-      console.warn(`Resource ${resource_item_id} is not currently in use.`);
+   // Prevent update if current status is "in use"
+   if (currentStatus === "in use") {
+      console.warn(`Cannot update status. Resource ${resource_item_id} is currently in use.`);
       return false;
    }
 
-   // Update allocation history to set end_date
-   const updateHistoryQuery = `
-      UPDATE allocation_history 
-      SET end_date = NOW() 
-      WHERE resource_item_id = ? AND end_date IS NULL;
-   `;
+   // Prevent unnecessary updates
+   if (currentStatus === normalizedStatus) {
+      console.log("Status is already up to date.");
+      return false;
+   }
 
-   await connection.query(updateHistoryQuery, [resource_item_id]);
-
-   // Update resource status
+   // Perform the update
    const updateResourceQuery = "UPDATE resource_items SET status = ? WHERE resource_item_id = ?";
    const [resourceUpdate] = await connection.query(updateResourceQuery, [normalizedStatus, resource_item_id]);
 
